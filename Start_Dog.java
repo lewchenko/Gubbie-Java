@@ -16,13 +16,10 @@ class Dog {
     String Colour;
     Boolean Diabetic;
     int number_of_readings;
+    float max_insulin;
 
-    /* Expected values */
-    float blood_sugar_low;
-    float blood_sugar_high;
 
     /* expected blood sugar values for every half hour - low value & high value range*/
-
     float[][] exp_blood_sugar = new float[2][48];
 
 
@@ -40,8 +37,16 @@ class Dog {
     int Needs_Wee;     // value between 1 [does not] and 10 [does]
     float Dog_Time;    // an event based measure 0 to 24 of the state the Dog is at on a given day.
 
+    float last_insulin_given; // last insulin value given.
+    int last_insulin_given_time; // time of last injection.
+
+
 
     public void Initialise_BG_Curve() {
+
+        last_insulin_given=0; // will be reset when insulin is given
+        max_insulin = 10;
+
 
 
         /* 0, = Low Value 1,=High Value */
@@ -127,11 +132,30 @@ class Dog {
 
 
 
-    public void Inject_Insulin() {
+    public void Inject_Insulin(float ui, int hr) {
+
+        last_insulin_given=ui;
+        last_insulin_given_time=hr;
+
+        System.out.println(DName + " had an insulin injection of " + ui + "ui at " + hr);
+
+        if (last_insulin_given>max_insulin) {
+
+
+            System.out.println("*** Warning - Insulin dose of " + ui + "ui exceeds max dose of " + max_insulin + "ui ***");
+            System.out.println("*** Take RECOVERY ACTION NOW ***");
+
+        }
+
 
     }
 
     public void Feed() {
+
+
+
+
+
 
     }
 
@@ -139,7 +163,11 @@ class Dog {
 
     }
 
-    public void Take_for_Wee() {
+    public void Take_for_Wee(int hr) {
+
+        System.out.println(DName + " is going for a wee at " + hr + "am");
+        Needs_Wee=0;
+        Dog_Time=hr;
 
     }
 
@@ -158,15 +186,10 @@ class Dog {
         System.out.println(DName + " is waking up! Time is " + hr + "am");
 
         Needs_Wee=10;
+        Dog_Time=hr;
 
-        if (hr<8) {
-            blood_sugar_low = 12;
-            blood_sugar_high = 26;
-        } else {
-            blood_sugar_low = 19;
-            blood_sugar_high = 29;
+        System.out.println(DName + " needs a wee, feeding, measuring, then insulin.");
 
-        }
 
     }
 
@@ -184,9 +207,7 @@ public void Status (String codes) {
             System.out.println("");
             System.out.println("Current Blood Sugar Level=" + blood_sugar_now);
             System.out.println("");
-            System.out.println("Low Rang=" + blood_sugar_low);
-            System.out.println("Current Blood Sugar Level=" + blood_sugar_high);
-        }
+                   }
 
 
         /* Do ALERTS - Check if Blood sugar is in range
@@ -236,6 +257,21 @@ public void Check_Alerts() {
             System.out.println("");
             System.out.println("Last Blood Sugar Reading : " + blood_sugar_now + " taken at " + blood_sugar_time[number_of_readings] + " is in the range of " + exp_blood_sugar[0][blood_sugar_time[number_of_readings]] + " to " + exp_blood_sugar[1][blood_sugar_time[number_of_readings]]);
         }
+
+        if (Needs_Wee>8) {
+            System.out.println("*** " + DName + " definitely needs to go for a wee ***");
+        } else {
+
+
+            if (Needs_Wee<8 & Needs_Wee>3) {
+                System.out.println("*** " + DName + " probably needs to go for a wee ***");
+            }
+
+
+        }
+
+
+
         alert=0;
 
 }
@@ -253,7 +289,7 @@ public void Measure(float reading, int hr) {
         System.out.println("");
         System.out.println("Blood Sugar Reading of "+ reading + " taken at "+hr);
         blood_sugar_now=reading;
-
+        Dog_Time=hr;
 
 }
 
@@ -285,15 +321,22 @@ public class Start_Dog {
         /** take for a wee, feed, measure, insulin, sleep
          *
          */
+        Gub.Take_for_Wee(7);
 
         Gub.Measure(29,7);
 
         Gub.Check_Alerts();
 
+        Gub.Inject_Insulin(12,7);
+
 
 
 
         Gub.Status("Alert Only");
+        /*Gub.Status("Full");*/
+
+
+
 
 
 
